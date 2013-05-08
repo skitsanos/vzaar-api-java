@@ -16,6 +16,8 @@ local.properties
 .settings/
 .loadpath
 
+.svn/
+
 # External tool builders
 .externalToolBuilders/
 
