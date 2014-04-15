@@ -1,5 +1,8 @@
 package com.vzaar.examples.android.upload;
 
+import android.content.Context;
+import android.os.AsyncTask;
+import com.vzaar.VideoProcessQuery;
 import com.vzaar.Vzaar;
 
 import android.app.Activity;
@@ -18,10 +21,10 @@ public class processVideoActivity extends Activity {
     public String guid;
     
     private String token;
-    private String secret;
+    private String userName;
     private Vzaar vzaarApi;
     
-    private String videoId;
+    private Long videoId;
     
     public Button btnProcessVideo;
      
@@ -36,22 +39,14 @@ public class processVideoActivity extends Activity {
         Intent intent = getIntent();
         guid = intent.getStringExtra("guid");
         token = intent.getStringExtra("token");
-        secret = intent.getStringExtra("secret");
+        userName = intent.getStringExtra("userName");
     }
     
     private void addListeneres() {
 		btnProcessVideo.setOnClickListener(new View.OnClickListener() {			
 			public void onClick(View v) {
-				if ((token.length() > 0) && (secret.length() > 0)) {
-					if (null == vzaarApi)
-						vzaarApi = new Vzaar(token, secret);
-					if (guid.length() > 0) {
-						videoId = vzaarApi.processVideo(guid, txtTitle.getText().toString(), txtDesc.getText().toString(), txtLabels.getText().toString());
-						Intent retIntent = new Intent();
-						retIntent.putExtra("video_id", videoId);
-						setResult(RESULT_OK, retIntent);
-						Toast.makeText(getApplicationContext(), "Video Processed\nVideo Id - " + videoId, 40).show();
-					}
+				if ((token.length() > 0) && (userName.length() > 0)) {
+					processFile();
 					finish();
 					return;
 				}
@@ -65,6 +60,55 @@ public class processVideoActivity extends Activity {
     	txtDesc = (EditText)findViewById(R.id.txtDesc);
     	txtLabels = (EditText)findViewById(R.id.txtLabels);
     	btnProcessVideo = (Button)findViewById(R.id.processBtn);
+    }
+
+    private class ProcessVideoTask extends AsyncTask<String, Integer, String> {
+        private Context context;
+        public ProcessVideoTask(Context context) {
+            super();
+            this.context = context;
+        }
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+            if (null == vzaarApi)
+                vzaarApi = new Vzaar(userName, token);
+            if (guid.length() > 0) {
+                VideoProcessQuery videoProcessQuery = new VideoProcessQuery();
+                videoProcessQuery.guid = guid;
+                videoProcessQuery.title = txtTitle.getText().toString();
+                videoProcessQuery.description = txtDesc.getText().toString();
+                videoProcessQuery.labels = txtLabels.getText().toString().split(",");
+                videoId = vzaarApi.processVideo(videoProcessQuery);
+            }
+
+            return guid;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+            Intent retIntent = new Intent();
+            retIntent.putExtra("video_id", videoId);
+            setResult(RESULT_OK, retIntent);
+            Toast.makeText(getApplicationContext(), "Video Processed\nVideo Id - " + videoId, 40).show();
+
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... progressPercent) {
+
+        }
+    }
+
+    private void processFile(){
+        ProcessVideoTask task = new ProcessVideoTask(this);
+        task.execute();
+
     }
 
 }

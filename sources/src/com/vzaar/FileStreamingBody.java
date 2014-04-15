@@ -1,8 +1,8 @@
 package com.vzaar;
 
-import java.io.InputStream;
-
 import org.apache.http.entity.mime.content.InputStreamBody;
+
+import java.io.InputStream;
 
 public class FileStreamingBody extends InputStreamBody {
     private final long contentLength;
