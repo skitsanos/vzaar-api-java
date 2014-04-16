@@ -41,13 +41,12 @@ import java.io.*;
 import java.net.URLEncoder;
 import java.util.List;
 
-public class Vzaar
-{
-
+public class Vzaar {
 	public String username;
 	public String token;
 	public boolean enableFlashSupport = false;
     public String apiUrl = "https://vzaar.com/";
+    public int bufferSize = 131072; //128Kb
 
 	private OAuthConsumer consumer;
 
@@ -399,13 +398,14 @@ public class Vzaar
         HttpPost request = new HttpPost(_url);
 
         if ((null != in) && (null != fileName) && (1 <= contentLength))  {
-            ContentBody body = new FileStreamingBody(in, fileName, contentLength);
+            ContentBody body = new FileStreamingBody(in, fileName, contentLength, bufferSize);
 
             request.addHeader("User-agent", "Vzaar API Client");
             request.addHeader("x-amz-acl", signature.acl);
             request.addHeader("Enclosure-Type", "multipart/form-data");
 
             CountingMultiPartEntity entity = new CountingMultiPartEntity(listener);
+
             entity.addPart("AWSAccessKeyId", new StringBody(signature.accessKeyId));
             entity.addPart("Signature", new StringBody(signature.signature));
             entity.addPart("acl", new StringBody(signature.acl));

@@ -16,6 +16,7 @@ public class CountingMultiPartEntity extends MultipartEntity {
     public CountingMultiPartEntity(ProgressListener listener) {
         super(HttpMultipartMode.BROWSER_COMPATIBLE);        
         this.listener = listener;
+
     }
 
     @Override
@@ -39,6 +40,7 @@ public class CountingMultiPartEntity extends MultipartEntity {
         public CountingOutputStream(final OutputStream out) {
             super(out);
             wrappedOutputStream_ = out;
+
         }
 
         public void write(byte[] b, int off, int len) throws IOException {
