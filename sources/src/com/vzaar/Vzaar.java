@@ -113,7 +113,6 @@ public class Vzaar {
 		if ((null == userName) || (userName.length() == 0)) return null;
 		String _url = apiUrl;
 		String responseBody = getURLResponse(_url + "api/" + userName + ".json");
-		//System.out.println(responseBody);
 		String error = checkError(responseBody);
 		if (null != error) throw new VzaarException(error);
 		return UserDetails.fromJson(responseBody);
@@ -133,7 +132,6 @@ public class Vzaar {
 		String responseBody = getURLResponse(_url);
 		String error = checkError(responseBody);
 		if (null != error) throw new VzaarException(error);
-		System.out.println(responseBody);
 		return AccountDetails.fromJson(responseBody);
 	}
 
@@ -172,7 +170,6 @@ public class Vzaar {
 			}
 		}
 		String responseBody = getURLResponse(_url);
-		System.out.println(responseBody);
 		return Video.fromJson(new TypeReference<List<Video>>() {
 		}, responseBody);
 	}
@@ -191,7 +188,6 @@ public class Vzaar {
 		String responseBody = getURLResponse(_url);
 		String error = checkError(responseBody);
 		if (null != error) throw new VzaarException(error);
-		System.out.println(responseBody);
 		VideoDetails videoDetails = VideoDetails.fromJson(responseBody);
 		videoDetails.poster = "http://view.vzaar.com/" + videoId + "/image";
 		return videoDetails;
@@ -209,15 +205,14 @@ public class Vzaar {
 		postData.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
 		postData.append("<vzaar-api><_method>put</_method>");
 		if (null != videoEditQuery.title)
-			postData.append("<video><title>").append(videoEditQuery.title).append("</title>");
+			postData.append("<video><title>").append(sanitizeString(videoEditQuery.title)).append("</title>");
 		if (null != videoEditQuery.description)
-			postData.append("<description>").append(videoEditQuery.description).append("</description>");
+			postData.append("<description>").append(sanitizeString(videoEditQuery.description)).append("</description>");
 		postData.append("<private>").append(videoEditQuery.markAsPrivate).append("</private>");
 		if (null != videoEditQuery.seoUrl)
 			postData.append("<seo_url>").append(videoEditQuery.seoUrl).append("</seo_url>");
 		postData.append("</video></vzaar-api>");
 
-		//System.out.println(postData.toString());
 		String responseBody = getURLResponse(_url, true, "PUT", postData.toString());
 
 		if ((null == responseBody) || (responseBody.length() == 0))
@@ -238,10 +233,7 @@ public class Vzaar {
 		postData.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
 		postData.append("<vzaar-api><_method>delete</_method></video></vzaar-api>");
 
-		System.out.println(_url + "\n" + postData.toString());
 		String responseBody = getURLResponse(_url, true, "DELETE", postData.toString());
-
-		System.out.println(responseBody);
 
 		int videoStatusId = 0;
 		DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
@@ -280,13 +272,13 @@ public class Vzaar {
 		if ((null != videoProcessQuery.guid) && (videoProcessQuery.guid.length() > 0))
 			postData.append("<guid>").append(videoProcessQuery.guid).append("</guid>");
 		if (null != videoProcessQuery.title)
-			postData.append("<title>").append(videoProcessQuery.title).append("</title>");
+			postData.append("<title>").append(sanitizeString(videoProcessQuery.title)).append("</title>");
 		if (null != videoProcessQuery.description)
-			postData.append("<description>").append(videoProcessQuery.description).append("</description>");
+			postData.append("<description>").append(sanitizeString(videoProcessQuery.description)).append("</description>");
 		if ((null != videoProcessQuery.labels) && (videoProcessQuery.labels.length > 0)) {
 			StringBuilder stringBuilder = new StringBuilder();
 			for (String label : videoProcessQuery.labels)
-				stringBuilder.append(label).append(",");
+				stringBuilder.append(sanitizeString(label)).append(",");
 			postData.append("<labels>")
 					.append(stringBuilder.substring(0, stringBuilder.length() - 1))
 					.append("</labels>");
@@ -295,9 +287,7 @@ public class Vzaar {
 		if (videoProcessQuery.transcode)
 			postData.append("<transcoding>true</transcoding>");
 		postData.append("</video></vzaar-api>");
-		//System.out.println(postData.toString());
 		String responseBody = getURLResponse(_url, true, "POST", postData.toString());
-		//System.out.println(responseBody);
 		DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
 		domFactory.setNamespaceAware(false);
 		InputSource is = new InputSource();
@@ -329,12 +319,10 @@ public class Vzaar {
 				.append("</language><video_id>")
 				.append(query.videoId)
 				.append("</video_id><body>")
-				.append(query.body)
+				.append(sanitizeString(query.body))
 				.append("</body></subtitle></vzaar-api>");
 
-		System.out.println(postData.toString());
 		String responseBody = getURLResponse(_url, true, "POST", postData.toString());
-		System.out.println(responseBody);
 		DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
 		domFactory.setNamespaceAware(false);
 		InputSource is = new InputSource();
@@ -366,7 +354,6 @@ public class Vzaar {
 		}
 
 		String responseBody = getURLResponse(_url);
-//		System.out.println(responseBody);
 		signature = new UploadSignature(responseBody);
 		return signature;
 	}
@@ -392,7 +379,6 @@ public class Vzaar {
 		}
 
 		String responseBody = getURLResponse(_url);
-//		System.out.println(responseBody);
 		signature = new UploadSignature(responseBody);
 		return signature;
 	}
@@ -443,7 +429,6 @@ public class Vzaar {
 
 			HttpResponse response = httpClient.execute(request);
 			responseBody = EntityUtils.toString(response.getEntity());
-			//System.out.println(responseBody);
 
 			DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
 			domFactory.setNamespaceAware(false);
@@ -456,7 +441,6 @@ public class Vzaar {
 			if (postResponseKey.length() > 0) {
 				String[] exploded = postResponseKey.split("/");
 				guid = exploded[exploded.length - 2];
-				//System.out.println("Parsed GUID - " + guid);
 			} else {
 				throw new VzaarException(responseBody);
 			}
@@ -499,7 +483,6 @@ public class Vzaar {
 
 	public String generateThumbnail(Long videoId, int thumbTime) throws Exception {
 		String _url = apiUrl + "api/videos/" + videoId + "/generate_thumb.xml";
-		//System.out.println(_url);
 		StringBuilder postData = new StringBuilder();
 		postData.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
 				.append("<vzaar-api>")
@@ -508,9 +491,7 @@ public class Vzaar {
 				.append("</video>")
 				.append("</vzaar-api>");
 
-		//System.out.println(postData.toString());
 		String responseBody = getURLResponse(_url, true, "POST", postData.toString());
-		//System.out.println(responseBody);
 
 		DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
 		domFactory.setNamespaceAware(false);
@@ -580,7 +561,12 @@ public class Vzaar {
 		}
 		return responseBody;
 	}
-	
+
+	private static String sanitizeString(String str) {
+
+		return str.replace("&","&amp;").replace("'","&apos;").replace("\"", "&quot;").replace("<","&lt;").replace(">","&gt;");
+
+	}
 	
 	/**
 	 *
@@ -597,9 +583,9 @@ public class Vzaar {
 
 		postData.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?><vzaar-api><link_upload><key>")
 				.append(signature.key).append("</key>").append("<guid>").append(signature.guid).append("</guid>")
-				.append("<url>").append(query.url).append("</url>").append("<encoding_params>")
-				.append("<title>").append(query.title).append("</title>")
-				.append("<description>").append(query.description).append("</description>")
+				.append("<url>").append(sanitizeString(query.url)).append("</url>").append("<encoding_params>")
+				.append("<title>").append(sanitizeString(query.title)).append("</title>")
+				.append("<description>").append(sanitizeString(query.description)).append("</description>")
 				.append("<size_id>").append(query.size_id).append("</size_id>")
 				.append("<bitrate>").append(query.bitrate).append("</bitrate>")
 				.append("<width>").append(query.width).append("</width>")
